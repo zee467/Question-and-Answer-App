@@ -4,6 +4,7 @@ from database import get_db
 
 
 app = Flask(__name__)
+app.config["DEBUG"] = True
 
 # closes down database 
 @app.teardown_appcontext
@@ -30,8 +31,22 @@ def register():
 
     return render_template("register.html")
 
-@app.route("/login")
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    db = get_db()
+    if request.method == "POST":
+        name = request.form['name']
+        password = request.form["password"]
+
+        user_cur = db.execute('select id, name, password from users where name = ?', [name])
+        user_result = user_cur.fetchone()
+
+        if check_password_hash(user_result['password'], password):
+            return f"<h1>The password is correct!"
+        else:
+            return f"<h1>The password is incorrect!"
+
     return render_template("login.html")
 
 @app.route("/question")

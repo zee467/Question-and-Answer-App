@@ -2,3 +2,4 @@ venv
 .flaskenv
 *.txt
 __pycache__
+*.db

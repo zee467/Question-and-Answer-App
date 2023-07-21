@@ -1,7 +1,16 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, g
+from database import get_db
+
 
 app = Flask(__name__)
 
+# closes down database 
+@app.teardown_appcontext
+def close_db(err):
+    if hasattr(g, 'sqlite_db'):
+        g.sqlite_db.close_db()
+
+        
 
 @app.route("/")
 def index():

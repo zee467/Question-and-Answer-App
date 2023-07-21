@@ -13,6 +13,6 @@ def connect_db():
 
 def get_db():
     if not hasattr(g, 'sqlite_db'):
-        connect_db()
+        g.sqlite_db = connect_db()
     return g.sqlite_db
 

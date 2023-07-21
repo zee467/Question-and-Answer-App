@@ -15,18 +15,32 @@ def close_db(err):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 
+def load_current_user():
+    g.current_user = None
+    if 'user' in session:
+        user = session['user']
+        db = get_db()
+        user_cur = db.execute('SELECT id, name, password, expert, admin FROM users WHERE name = ?', [user])
+        g.current_user = user_cur.fetchone()
+
+
+def get_current_user():
+    if 'current_user' not in g:
+        load_current_user()
+    return g.current_user
 
 
 @app.route("/")
 def index():
-    # checks if there is a user key in session
-    user = session.get('user', None)
+    user = get_current_user()
 
     return render_template("home.html", user=user) 
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    user = get_current_user()
+
     db = get_db()
     if request.method == "POST":
         hashed_password = generate_password_hash(request.form["password"], method="sha256")
@@ -40,6 +54,8 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    user = get_current_user()
+
     db = get_db()
     if request.method == "POST":
         name = request.form['name']
@@ -50,31 +66,41 @@ def login():
 
         if check_password_hash(user_result['password'], password):
             session['user'] = user_result['name']
-            return f"<h1>The password is correct!"
+            return "<h1>The password is correct!"
         else:
-            return f"<h1>The password is incorrect!"
+            return "<h1>The password is incorrect!"
 
     return render_template("login.html")
 
 
 @app.route("/question")
 def question():
+    user = get_current_user()
+
     return render_template("question.html")
 
 @app.route("/answer")
 def answer():
+    user = get_current_user()
+
     return render_template("answer.html")
 
 @app.route("/ask")
 def ask():
+    user = get_current_user()
+
     return render_template("ask.html")
 
 @app.route("/unanswered")
 def unanswered():
+    user = get_current_user()
+
     return render_template("unanswered.html")
 
 @app.route("/users")
 def users():
+    user = get_current_user()
+
     return render_template("users.html")
 
 

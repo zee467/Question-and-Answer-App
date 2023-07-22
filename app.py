@@ -84,11 +84,23 @@ def question():
 
     return render_template("question.html", user=user)
 
-@app.route("/answer")
-def answer():
+@app.route("/answer/<int:question_id>", methods=["GET", "POST"])
+def answer(question_id):
     user = get_current_user()
+    db = get_db()
 
-    return render_template("answer.html", user=user)
+    if request.method == "POST":
+        expert_answer = request.form["answer"]
+        db.execute('update questions set answer = ? where id = ?', [expert_answer, question_id])
+        db.commit()
+        return redirect(url_for('unanswered'))
+
+
+    question_cur = db.execute('select id, question_text from questions where id = ?', [question_id])
+    result = question_cur.fetchone()
+
+    return render_template("answer.html", user=user, result=result)
+
 
 @app.route("/ask", methods=["GET", "POST"])
 def ask():

@@ -90,11 +90,22 @@ def answer():
 
     return render_template("answer.html", user=user)
 
-@app.route("/ask")
+@app.route("/ask", methods=["GET", "POST"])
 def ask():
+    db = get_db()
     user = get_current_user()
+    if request.method == "POST":
+        question = request.form["question"]
+        expert_id = request.form["expert"]
+        db.execute("insert into questions (question_text, asked_by_id, expert_id) values (?, ?, ?)", [question, user['id'], expert_id])
+        db.commit()
 
-    return render_template("ask.html", user=user)
+        return redirect(url_for('index'))
+
+    expert_cur = db.execute('select id, name from users where expert = 1')
+    expert_results = expert_cur.fetchall()
+
+    return render_template("ask.html", user=user, experts=expert_results)
 
 @app.route("/unanswered")
 def unanswered():

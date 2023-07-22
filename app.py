@@ -43,11 +43,16 @@ def register():
 
     db = get_db()
     if request.method == "POST":
+        name = request.form["name"]
         hashed_password = generate_password_hash(request.form["password"], method="sha256")
-        db.execute('insert into users (name, password, expert, admin) values (?, ?, ?, ?)', [request.form["name"], hashed_password, '0', '0'])
+        db.execute('insert into users (name, password, expert, admin) values (?, ?, ?, ?)', [name, hashed_password, '0', '0'])
         db.commit()
 
-        return f"<h1>User created!</h1>"
+        # adds the username to session
+        session['user'] = name
+
+        # redirects to the home route upon registeration
+        return redirect(url_for('index'))
 
     return render_template("register.html", user=user)
 
@@ -66,7 +71,7 @@ def login():
 
         if check_password_hash(user_result['password'], password):
             session['user'] = user_result['name']
-            return "<h1>The password is correct!"
+            return redirect(url_for('index'))
         else:
             return "<h1>The password is incorrect!"
 
@@ -101,7 +106,19 @@ def unanswered():
 def users():
     user = get_current_user()
 
-    return render_template("users.html", user=user)
+    db = get_db()
+    user_cur = db.execute('select id, name, expert, admin from users')
+    user_results = user_cur.fetchall()
+
+    return render_template("users.html", user=user, users=user_results)
+
+@app.route("/promote/<int:user_id>")
+def promote(user_id):
+    db = get_db()
+    db.execute('update users set expert = 1 where id = ?', [user_id])
+    db.commit()
+
+    return redirect(url_for('users'))
 
 
 @app.route("/logout")

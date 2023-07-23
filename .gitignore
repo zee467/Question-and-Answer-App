@@ -1,5 +1,5 @@
 venv
 .flaskenv
-*.txt
+note.txt
 __pycache__
 *.db

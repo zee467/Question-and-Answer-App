@@ -74,6 +74,7 @@ def login():
     user = get_current_user()
 
     db = get_db()
+    error = None
     if request.method == "POST":
         name = request.form['name']
         password = request.form["password"]
@@ -81,13 +82,17 @@ def login():
         user_cur = db.execute('select id, name, password from users where name = ?', [name])
         user_result = user_cur.fetchone()
 
-        if check_password_hash(user_result['password'], password):
-            session['user'] = user_result['name']
-            return redirect(url_for('index'))
+        # checks if the user exist in the database
+        if user_result:
+            if check_password_hash(user_result['password'], password):
+                session['user'] = user_result['name']
+                return redirect(url_for('index'))
+            else:
+                error = "The password is incorrect!"
         else:
-            return "<h1>The password is incorrect!"
+            error = "This user doesn't exist!"
 
-    return render_template("login.html", user=user)
+    return render_template("login.html", user=user, error=error)
 
 
 @app.route("/question/<int:question_id>")
